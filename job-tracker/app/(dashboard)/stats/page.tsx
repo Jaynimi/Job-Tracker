@@ -1,11 +1,7 @@
-import React from 'react'
+import React from "react";
 
 function StatsPage() {
-  return (
-    <div>
-      
-    </div>
-  )
+  return <div>Stats</div>;
 }
 
-export default StatsPage
+export default StatsPage;

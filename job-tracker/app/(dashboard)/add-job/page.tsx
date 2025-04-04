@@ -1,11 +1,7 @@
-import React from 'react'
+import React from "react";
 
 const AddJobPage = () => {
-  return (
-    <h1>
-      AddJobPage
-    </h1>
-  )
-}
+  return <h1>AddJobPage</h1>;
+};
 
-export default AddJobPage
+export default AddJobPage;
