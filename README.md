@@ -17,4 +17,11 @@ npx shadcn@latest add button
 
 npm i lucide-react
 
+
+<!-- dropdown menu from chadcn -->
+npx shadcn-ui@latest add dropdown-menu
+npx shadcn@latest add dropdown-menu
+
+<!-- theme install (for dark mode) -->
+npm i next-themes
 ''''
