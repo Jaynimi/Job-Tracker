@@ -1,18 +1,30 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useUser } from '@clerk/nextjs';
+
+type PageProps = {
+  params: {
+    id: string;
+  };
+};
 
 type Job = {
   id: string;
   company: string;
   position: string;
   status: string;
+  dateApplied?: string;
 };
 
-export default function EditJobPage({ params }: { params: { id: string } }) {
+export default function EditJobPage({ params }: PageProps) {
+  const { user } = useUser();
   const router = useRouter();
   const { id } = params;
+
   const [job, setJob] = useState<Job | null>(null);
   const [form, setForm] = useState({
     company: '',
@@ -21,33 +33,44 @@ export default function EditJobPage({ params }: { params: { id: string } }) {
   });
 
   useEffect(() => {
-    const jobs: Job[] = JSON.parse(localStorage.getItem('jobs') || '[]');
-    const current = jobs.find((j) => j.id === id);
-    if (current) {
-      setJob(current);
-      setForm({
-        company: current.company,
-        position: current.position,
-        status: current.status,
-      });
-    }
-  }, [id]);
+    const fetchJob = async () => {
+      if (!user) return;
+
+      const jobRef = doc(db, 'users', user.id, 'jobs', id);
+      const jobSnap = await getDoc(jobRef);
+
+      if (jobSnap.exists()) {
+        const data = jobSnap.data() as Job;
+        setJob(data);
+        setForm({
+          company: data.company,
+          position: data.position,
+          status: data.status,
+        });
+      }
+    };
+
+    fetchJob();
+  }, [user, id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const jobs: Job[] = JSON.parse(localStorage.getItem('jobs') || '[]');
-    const updatedJobs = jobs.map((j) =>
-      j.id === id ? { ...j, ...form } : j
-    );
-    localStorage.setItem('jobs', JSON.stringify(updatedJobs));
+    if (!user) return;
+
+    const jobRef = doc(db, 'users', user.id, 'jobs', id);
+    await updateDoc(jobRef, {
+      ...form,
+      updatedAt: new Date().toISOString(),
+    });
+
     router.push('/jobs');
   };
 
-  if (!job) return <p className="p-4">Loading job...</p>;
+  if (!user || !job) return <p className="p-4">Loading job...</p>;
 
   return (
     <div className="p-4 max-w-md mx-auto">
