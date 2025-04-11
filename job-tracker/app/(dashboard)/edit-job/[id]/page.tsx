@@ -6,12 +6,6 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useUser } from '@clerk/nextjs';
 
-type PageProps = {
-  params: {
-    id: string;
-  };
-};
-
 type Job = {
   id: string;
   company: string;
@@ -20,7 +14,13 @@ type Job = {
   dateApplied?: string;
 };
 
-export default function EditJobPage({ params }: PageProps) {
+type Props = {
+  params: {
+    id: string;
+  };
+};
+
+export default function EditJobPage({ params }: Props) {
   const { user } = useUser();
   const router = useRouter();
   const { id } = params;
@@ -36,17 +36,21 @@ export default function EditJobPage({ params }: PageProps) {
     const fetchJob = async () => {
       if (!user) return;
 
-      const jobRef = doc(db, 'users', user.id, 'jobs', id);
-      const jobSnap = await getDoc(jobRef);
+      try {
+        const jobRef = doc(db, 'users', user.id, 'jobs', id);
+        const jobSnap = await getDoc(jobRef);
 
-      if (jobSnap.exists()) {
-        const data = jobSnap.data() as Job;
-        setJob(data);
-        setForm({
-          company: data.company,
-          position: data.position,
-          status: data.status,
-        });
+        if (jobSnap.exists()) {
+          const data = jobSnap.data() as Job;
+          setJob(data);
+          setForm({
+            company: data.company,
+            position: data.position,
+            status: data.status,
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching job:', error);
       }
     };
 
@@ -61,13 +65,16 @@ export default function EditJobPage({ params }: PageProps) {
     e.preventDefault();
     if (!user) return;
 
-    const jobRef = doc(db, 'users', user.id, 'jobs', id);
-    await updateDoc(jobRef, {
-      ...form,
-      updatedAt: new Date().toISOString(),
-    });
-
-    router.push('/jobs');
+    try {
+      const jobRef = doc(db, 'users', user.id, 'jobs', id);
+      await updateDoc(jobRef, {
+        ...form,
+        updatedAt: new Date().toISOString(),
+      });
+      router.push('/jobs');
+    } catch (error) {
+      console.error('Error updating job:', error);
+    }
   };
 
   if (!user || !job) return <p className="p-4">Loading job...</p>;
@@ -94,7 +101,12 @@ export default function EditJobPage({ params }: PageProps) {
           className="w-full border p-2 rounded"
           required
         />
-        <select name="status" value={form.status} onChange={handleChange} className="w-full border p-2 rounded">
+        <select
+          name="status"
+          value={form.status}
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
+        >
           <option value="Applied">Applied</option>
           <option value="Interviewing">Interviewing</option>
           <option value="Offer">Offer</option>
