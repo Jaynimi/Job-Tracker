@@ -32,8 +32,12 @@ const firebaseConfig = {
   measurementId: "G-XMTZ4P824P"
 };
 
-// Initialize Firebase
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// // Initialize Firebase
+// const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+// const db = getFirestore(app);
 
-export { db };
+// export { db };
+
+// Initialize Firebase
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+export const db = getFirestore(app);
