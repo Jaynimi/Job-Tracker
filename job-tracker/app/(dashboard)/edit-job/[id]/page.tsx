@@ -14,16 +14,16 @@ type Job = {
   dateApplied?: string;
 };
 
-type Props = {
+interface PageProps {
   params: {
     id: string;
   };
-};
+}
 
-export default function EditJobPage({ params }: Props) {
+export default function EditJobPage(props: PageProps) {
   const { user } = useUser();
   const router = useRouter();
-  const { id } = params;
+  const { id } = props.params;
 
   const [job, setJob] = useState<Job | null>(null);
   const [form, setForm] = useState({
