@@ -1,3 +1,4 @@
+// app/edit-job/[id]/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -6,122 +7,89 @@ import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useUser } from '@clerk/nextjs';
 
-type JobData = {
-  company: string;
-  position: string;
-  status: string;
-  dateApplied?: any;
-};
-
-export default function EditJobPage() {
-  const { user, isLoaded } = useUser();
+export default function EditJobClientPage() {
   const router = useRouter();
   const params = useParams();
-  const id = params?.id as string;
-
+  const { user, isLoaded } = useUser();
+  
+  const jobId = Array.isArray(params?.id) ? params.id[0] : params?.id;
   const [form, setForm] = useState({
     company: '',
     position: '',
     status: 'Applied',
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isLoaded || !user || !id) return;
+    if (!isLoaded || !user || !jobId) return;
 
-    const fetchJob = async () => {
+    const loadJob = async () => {
       try {
-        const jobRef = doc(db, 'users', user.id, 'jobs', id);
-        const jobSnap = await getDoc(jobRef);
-
-        if (jobSnap.exists()) {
-          const data = jobSnap.data() as JobData;
+        const docRef = doc(db, 'users', user.id, 'jobs', jobId);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data();
           setForm({
-            company: data.company,
-            position: data.position,
-            status: data.status,
+            company: data.company || '',
+            position: data.position || '',
+            status: data.status || 'Applied',
           });
-        } else {
-          setError('Job not found');
         }
       } catch (error) {
-        console.error('Error fetching job:', error);
-        setError('Failed to load job');
+        console.error("Error loading job:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchJob();
-  }, [user, id, isLoaded]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+    loadJob();
+  }, [user, jobId, isLoaded]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !id) return;
+    if (!user || !jobId) return;
 
     try {
-      const jobRef = doc(db, 'users', user.id, 'jobs', id);
-      await updateDoc(jobRef, {
+      await updateDoc(doc(db, 'users', user.id, 'jobs', jobId), {
         ...form,
         updatedAt: serverTimestamp(),
       });
       router.push('/jobs');
     } catch (error) {
-      console.error('Error updating job:', error);
-      setError('Failed to update job');
+      console.error("Error updating job:", error);
     }
   };
 
-  if (!isLoaded || loading) {
-    return <div className="p-4">Loading job data...</div>;
-  }
-
-  if (error) {
-    return (
-      <div className="p-4">
-        <p className="text-red-500">{error}</p>
-        <button
-          onClick={() => router.push('/jobs')}
-          className="mt-2 text-blue-600 underline"
-        >
-          Back to Jobs
-        </button>
-      </div>
-    );
-  }
+  if (loading) return <div className="p-4">Loading...</div>;
 
   return (
     <div className="p-4 max-w-md mx-auto">
-      <h2 className="text-xl font-semibold mb-4">Edit Job</h2>
+      <h1 className="text-xl font-bold mb-4">Edit Job</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
           name="company"
           value={form.company}
-          onChange={handleChange}
+          onChange={(e) => setForm({...form, company: e.target.value})}
+          className="w-full p-2 border rounded"
           placeholder="Company"
-          className="w-full border p-2 rounded"
           required
         />
         <input
           type="text"
           name="position"
           value={form.position}
-          onChange={handleChange}
+          onChange={(e) => setForm({...form, position: e.target.value})}
+          className="w-full p-2 border rounded"
           placeholder="Position"
-          className="w-full border p-2 rounded"
           required
         />
         <select
           name="status"
           value={form.status}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
+          onChange={(e) => setForm({...form, status: e.target.value})}
+          className="w-full p-2 border rounded"
         >
           <option value="Applied">Applied</option>
           <option value="Interviewing">Interviewing</option>
@@ -130,7 +98,7 @@ export default function EditJobPage() {
         </select>
         <button
           type="submit"
-          className="bg-green-600 text-white px-4 py-2 rounded w-full"
+          className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
         >
           Save Changes
         </button>
