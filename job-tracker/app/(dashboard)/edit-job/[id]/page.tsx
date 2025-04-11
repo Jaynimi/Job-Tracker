@@ -20,10 +20,11 @@ interface PageProps {
   };
 }
 
-export default function EditJobPage(props: PageProps) {
+// ✅ Must export default as function Page, not EditJobPage
+export default function Page({ params }: PageProps) {
   const { user } = useUser();
   const router = useRouter();
-  const { id } = props.params;
+  const { id } = params;
 
   const [job, setJob] = useState<Job | null>(null);
   const [form, setForm] = useState({
