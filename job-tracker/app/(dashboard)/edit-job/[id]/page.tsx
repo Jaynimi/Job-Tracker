@@ -14,13 +14,7 @@ type Job = {
   dateApplied?: string;
 };
 
-type EditJobPageProps = {
-  params: {
-    id: string;
-  };
-};
-
-export default function EditJobPage({ params }: EditJobPageProps) {
+export default function EditJobPage({ params }: { params: { id: string } }) {
   const { user } = useUser();
   const router = useRouter();
   const { id } = params;
