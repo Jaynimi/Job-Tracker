@@ -27,9 +27,9 @@ export default function EditJobPage({ params }: { params: { id: string } }) {
   });
 
   useEffect(() => {
-    const fetchJob = async () => {
-      if (!user) return;
+    if (!user) return;
 
+    const fetchJob = async () => {
       try {
         const jobRef = doc(db, 'users', user.id, 'jobs', id);
         const jobSnap = await getDoc(jobRef);
