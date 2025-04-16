@@ -54,16 +54,19 @@ import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useUser } from '@clerk/nextjs';
 
+type FirestoreTimestamp = {
+  seconds: number;
+  nanoseconds: number;
+  toDate: () => Date;
+};
+
 type Job = {
   id: string;
   company: string;
   position: string;
   status: string;
-  dateApplied?: {
-    seconds?: number;
-    nanoseconds?: number;
-    toDate?: () => Date;
-  } | string | Date;
+  createdAt?: FirestoreTimestamp;
+  updatedAt?: FirestoreTimestamp;
 };
 
 export default function JobsPage() {
@@ -84,12 +87,18 @@ export default function JobsPage() {
         setLoading(true);
         const jobsRef = collection(db, 'users', user.id, 'jobs');
         const querySnapshot = await getDocs(jobsRef);
-        
         const jobsData = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         })) as Job[];
-        
+
+        // Sort jobs by createdAt descending
+        jobsData.sort((a, b) => {
+          const dateA = parseDate(a.createdAt);
+          const dateB = parseDate(b.createdAt);
+          return dateB.getTime() - dateA.getTime();
+        });
+
         setJobs(jobsData);
         setError(null);
       } catch (err) {
@@ -104,33 +113,31 @@ export default function JobsPage() {
     fetchJobs();
   }, [isLoaded, user]);
 
+  const parseDate = (timestamp?: FirestoreTimestamp): Date => {
+    if (!timestamp || typeof timestamp.toDate !== 'function') return new Date(NaN);
+    return timestamp.toDate();
+  };
+
+  const formatDate = (timestamp?: FirestoreTimestamp): string => {
+    const parsed = parseDate(timestamp);
+    return isNaN(parsed.getTime()) ? 'N/A' : parsed.toLocaleDateString();
+  };
+
   const handleDeleteJob = async (jobId: string) => {
     if (!user || !confirm('Are you sure you want to delete this job?')) return;
-    
+
     try {
       setDeletingId(jobId);
       const jobRef = doc(db, 'users', user.id, 'jobs', jobId);
       await deleteDoc(jobRef);
-      setJobs(jobs.filter(job => job.id !== jobId));
+      setJobs(prev => prev.filter(job => job.id !== jobId));
+      alert('Job deleted successfully.');
     } catch (error) {
       console.error("Error deleting job:", error);
       setError("Failed to delete job. Please try again.");
+      alert("Failed to delete job.");
     } finally {
       setDeletingId(null);
-    }
-  };
-
-  const formatDate = (date: Job['dateApplied']) => {
-    if (!date) return 'N/A';
-    
-    if (typeof date === 'object' && 'toDate' in date) {
-      return date.toDate().toLocaleDateString();
-    }
-    
-    try {
-      return new Date(date as string | number).toLocaleDateString();
-    } catch {
-      return 'N/A';
     }
   };
 
@@ -146,7 +153,7 @@ export default function JobsPage() {
     return (
       <div className="p-4 text-red-500">
         {error}
-        <button 
+        <button
           onClick={() => window.location.reload()}
           className="ml-2 text-blue-500"
         >
@@ -159,7 +166,7 @@ export default function JobsPage() {
   return (
     <div className="p-4 max-w-2xl mx-auto">
       <h2 className="text-xl font-semibold mb-4">Your Job Applications</h2>
-      
+
       {jobs.length === 0 ? (
         <div>
           <p>No jobs found. Add your first job application!</p>
@@ -176,7 +183,7 @@ export default function JobsPage() {
                   <h3 className="font-bold">{job.position} @ {job.company}</h3>
                   <p className="text-sm">Status: {job.status}</p>
                   <p className="text-xs text-gray-500">
-                    Applied on: {formatDate(job.dateApplied)}
+                    Applied on: {formatDate(job.createdAt)}
                   </p>
                 </div>
                 <div className="flex gap-3">
