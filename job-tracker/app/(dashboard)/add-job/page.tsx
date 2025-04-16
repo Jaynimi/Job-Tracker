@@ -159,19 +159,19 @@ export default function AddJobPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    
+
     if (!user) {
       setError('User not authenticated');
       return;
     }
-  
+
     console.log("User ID:", user.id); // Verify this matches your Clerk ID
-  
+
     try {
       const newJobId = Date.now().toString();
       const jobsRef = collection(db, 'users', user.id, 'jobs');
       console.log("Full path:", jobsRef.path);
-      
+
       await setDoc(doc(jobsRef, newJobId), {
         company: form.company,
         position: form.position,
@@ -179,12 +179,17 @@ export default function AddJobPage() {
         testField: "TEST_VALUE", // Simple test field
         createdAt: serverTimestamp()
       });
-      
+
       console.log("Document written successfully!");
       router.push('/jobs');
     } catch (error) {
       console.error("Full error details:", error);
-      setError(`Failed: ${error.message}`); // Show actual error
+
+      if (error instanceof Error) {
+        setError(`Failed: ${error.message}`);
+      } else {
+        setError('Something went wrong');
+      }
     }
   };
 
