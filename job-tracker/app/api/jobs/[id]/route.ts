@@ -148,9 +148,9 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { [key: string]: string | string[] } }
 ) {
-  const { id } = params;
+  const id = params.id as string;
 
   try {
     const docRef = doc(db, 'jobs', id);
@@ -168,9 +168,9 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { [key: string]: string | string[] } }
 ) {
-  const { id } = params;
+  const id = params.id as string;
   const data = await request.json();
 
   try {
