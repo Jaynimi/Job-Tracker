@@ -47,6 +47,7 @@ export default function JobsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [isFiltered, setIsFiltered] = useState(false);
 
   useEffect(() => {
     if (!isLoaded || !user) {
@@ -98,9 +99,12 @@ export default function JobsPage() {
     }
     
     if (statusFilter !== 'all') {
-      results = results.filter(job => job.status === statusFilter);
+      results = results.filter(job => 
+        job.status.toLowerCase() === statusFilter.toLowerCase()
+      );
     }
-    
+
+    setIsFiltered(searchTerm !== '' || statusFilter !== 'all');
     setFilteredJobs(results);
   }, [searchTerm, statusFilter, jobs]);
 
@@ -130,6 +134,11 @@ export default function JobsPage() {
     } finally {
       setDeletingId(null);
     }
+  };
+
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
   };
 
   if (!isLoaded || loading) {
@@ -166,42 +175,58 @@ export default function JobsPage() {
       </div>
       
       <Card className="mb-6">
-        <CardContent className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="search" className="block text-sm font-medium mb-1">
-              Search Jobs
-            </label>
-            <Input
-              type="text"
-              id="search"
-              placeholder="Search by company or position"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="status" className="block text-sm font-medium mb-1">
-              Filter by Status
-            </label>
-            <Select
-              value={statusFilter}
-              onValueChange={(value) => setStatusFilter(value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="applied">Applied</SelectItem>
-                <SelectItem value="interview">Interview</SelectItem>
-                <SelectItem value="offer">Offer</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+  <CardContent className="p-4">
+    <div className="flex flex-col md:flex-row gap-4 w-full">
+      {/* Search - Takes most space */}
+      <div className="flex-[2] min-w-0"> {/* flex-[2] gives this 2 parts of available space */}
+        <label htmlFor="search" className="block text-sm font-medium mb-1">
+          Search Jobs
+        </label>
+        <Input
+          type="text"
+          id="search"
+          placeholder="Search by company or position"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full"
+        />
+      </div>
+
+      {/* Status Filter - Medium size */}
+      <div className="flex-1 min-w-0"> {/* flex-1 gives this 1 part of available space */}
+        <label htmlFor="status" className="block text-sm font-medium mb-1">
+          Filter by Status
+        </label>
+        <Select
+          value={statusFilter}
+          onValueChange={(value) => setStatusFilter(value)}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="applied">Applied</SelectItem>
+            <SelectItem value="interview">Interview</SelectItem>
+            <SelectItem value="offer">Offer</SelectItem>
+            <SelectItem value="rejected">Rejected</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Button - Fits neatly */}
+      <div className="flex-none self-end w-full md:w-auto"> {/* flex-none prevents growing */}
+        <Button
+          onClick={isFiltered ? handleClearFilters : () => setFilteredJobs(filteredJobs)}
+          variant={isFiltered ? "outline" : "default"}
+          className="w-full md:w-[120px]"
+        >
+          {isFiltered ? "Clear Filters" : "Search"}
+        </Button>
+      </div>
+    </div>
+  </CardContent>
+</Card>
 
       {filteredJobs.length === 0 ? (
         <Card>
@@ -210,10 +235,7 @@ export default function JobsPage() {
             {jobs.length > 0 && (
               <Button
                 variant="link"
-                onClick={() => {
-                  setSearchTerm('');
-                  setStatusFilter('all');
-                }}
+                onClick={handleClearFilters}
                 className="mt-2"
               >
                 Clear filters
