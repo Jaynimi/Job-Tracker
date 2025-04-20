@@ -15,6 +15,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
+import { Briefcase, CalendarDays, MapPin, Home, Pencil, Trash2 } from "lucide-react";
+import { Label } from '@/components/ui/label';
 
 type FirestoreTimestamp = {
   seconds: number;
@@ -174,62 +176,55 @@ export default function JobsPage() {
         </p>
       </div>
       
-      <Card className="mb-6">
-  <CardContent className="p-4">
-    <div className="flex flex-col md:flex-row gap-4 w-full">
-      {/* Search - Takes most space */}
-      <div className="flex-[2] min-w-0"> {/* flex-[2] gives this 2 parts of available space */}
-        <label htmlFor="search" className="block text-sm font-medium mb-1">
-          Search Jobs
-        </label>
-        <Input
-          type="text"
-          id="search"
-          placeholder="Search by company or position"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full"
-        />
-      </div>
-
-      {/* Status Filter - Medium size */}
-      <div className="flex-1 min-w-0"> {/* flex-1 gives this 1 part of available space */}
-        <label htmlFor="status" className="block text-sm font-medium mb-1">
-          Filter by Status
-        </label>
-        <Select
-          value={statusFilter}
-          onValueChange={(value) => setStatusFilter(value)}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="applied">Applied</SelectItem>
-            <SelectItem value="interview">Interview</SelectItem>
-            <SelectItem value="offer">Offer</SelectItem>
-            <SelectItem value="rejected">Rejected</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Button - Fits neatly */}
-      <div className="flex-none self-end w-full md:w-auto"> {/* flex-none prevents growing */}
-        <Button
-          onClick={isFiltered ? handleClearFilters : () => setFilteredJobs(filteredJobs)}
-          variant={isFiltered ? "outline" : "default"}
-          className="w-full md:w-[120px]"
-        >
-          {isFiltered ? "Clear Filters" : "Search"}
-        </Button>
-      </div>
-    </div>
-  </CardContent>
-</Card>
-
+      <Card className="mb-6 bg-card">
+        <CardContent className="p-4">
+          <div className="flex flex-col md:flex-row gap-4 w-full items-end">
+            <div className="flex-1 min-w-0 w-full">
+              <Label htmlFor="search" className="sr-only">Search Jobs</Label>
+              <Input
+                type="text"
+                id="search"
+                placeholder="Search by company or position"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full"
+              />
+            </div>
+  
+            <div className="flex-1 min-w-0 w-full">
+              <Label htmlFor="status" className="sr-only">Filter by Status</Label>
+              <Select
+                value={statusFilter}
+                onValueChange={(value) => setStatusFilter(value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="applied">Applied</SelectItem>
+                  <SelectItem value="interview">Interview</SelectItem>
+                  <SelectItem value="offer">Offer</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+  
+            <div className="w-full md:w-auto">
+              <Button
+                onClick={isFiltered ? handleClearFilters : () => setFilteredJobs(filteredJobs)}
+                variant={isFiltered ? "outline" : "default"}
+                className="w-full"
+              >
+                {isFiltered ? "Clear Filters" : "Search"}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+  
       {filteredJobs.length === 0 ? (
-        <Card>
+        <Card className="bg-gray-50 dark:bg-card">
           <CardContent className="p-8 text-center">
             <p className="text-muted-foreground">No jobs match your search criteria</p>
             {jobs.length > 0 && (
@@ -246,35 +241,71 @@ export default function JobsPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredJobs.map((job) => (
-            <Card key={job.id} className="hover:bg-accent/50 transition-colors h-full">
-              <CardContent className="p-4 flex flex-col h-full">
-                <div className="flex-grow">
-                  <h3 className="font-bold">{job.position} @ {job.company}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-sm">Status:</span>
-                    <span className={`text-xs px-2 py-1 rounded-full ${statusColors[job.status.toLowerCase()] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'}`}>
+            <Card 
+              key={job.id} 
+              className="bg-gray-100 dark:bg-card hover:bg-gray-100 dark:hover:bg-card/80 transition-colors h-full group border"
+            >
+              <CardContent className="p-4 flex flex-col h-full gap-3">
+                <div className="space-y-1">
+                  <h3 className="font-bold text-lg leading-tight text-foreground group-hover:text-primary transition-colors">
+                    {job.position}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">@{job.company}</p>
+                </div>
+            
+                <div className="grid gap-3 mt-1">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <div className="inline-flex items-center gap-1.5 text-sm text-foreground">
+                        <Briefcase className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="capitalize font-medium">{job.mode || 'full-time'}</span>
+                      </div>
+                      <div className="inline-flex items-center gap-1.5 text-sm text-foreground">
+                        <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span>{job.location || 'Remote'}</span>
+                      </div>
+                    </div>
+                  </div>
+            
+                  <div className="flex justify-between items-center">
+                    <div className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <CalendarDays className="h-4 w-4 flex-shrink-0" />
+                      <span>{formatDate(job.createdAt)}</span>
+                    </div>
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusColors[job.status.toLowerCase()]}`}>
                       {job.status}
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Applied on: {formatDate(job.createdAt)}
-                  </p>
                 </div>
-                <div className="flex gap-2 mt-4">
-                  <Button asChild variant="ghost" size="sm" className="flex-1">
-                    <Link href={`/edit-job/${job.id}`}>
-                      Edit
-                    </Link>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex-1 text-destructive hover:text-destructive"
-                    onClick={() => handleDeleteJob(job.id)}
-                    disabled={deletingId === job.id}
-                  >
-                    {deletingId === job.id ? 'Deleting...' : 'Delete'}
-                  </Button>
+            
+                <div className="flex justify-between items-center mt-auto pt-2 border-t border-border/50">
+                  <div className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <Home className="h-4 w-4 flex-shrink-0" />
+                    <span className="capitalize">{job.workType || 'remote'}</span>
+                  </div>
+                  
+                  <div className="flex gap-1">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                      asChild
+                    >
+                      <Link href={`/edit-job/${job.id}`} title="Edit">
+                        <Pencil className="h-[1.15rem] w-[1.15rem]" />
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive/80 hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => handleDeleteJob(job.id)}
+                      disabled={deletingId === job.id}
+                      title="Delete"
+                    >
+                      <Trash2 className="h-[1.15rem] w-[1.15rem]" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
