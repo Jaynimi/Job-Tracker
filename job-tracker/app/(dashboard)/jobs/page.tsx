@@ -29,6 +29,9 @@ type Job = {
   company: string;
   position: string;
   status: string;
+  mode?: string;         // Added
+  location?: string;     // Added
+  workType?: string;     // Added
   createdAt?: FirestoreTimestamp;
   updatedAt?: FirestoreTimestamp;
 };
