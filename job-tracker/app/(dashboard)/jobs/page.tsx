@@ -1,51 +1,3 @@
-// 'use client';
-
-// import { useEffect, useState } from 'react';
-// import Link from 'next/link';
-
-// type Job = {
-//   id: string;
-//   company: string;
-//   position: string;
-//   status: string;
-//   dateApplied?: string;
-// };
-
-// export default function JobsPage() {
-//   const [jobs, setJobs] = useState<Job[]>([]);
-
-//   useEffect(() => {
-//     const storedJobs = JSON.parse(localStorage.getItem('jobs') || '[]');
-//     setJobs(storedJobs);
-//   }, []);
-
-//   return (
-//     <div className="p-4 max-w-2xl mx-auto">
-//       <h2 className="text-xl font-semibold mb-4">Your Job Applications</h2>
-//       {jobs.length === 0 ? (
-//         <p>No jobs added yet.</p>
-//       ) : (
-//         <ul className="space-y-3">
-//           {jobs.map((job) => (
-//             <li key={job.id} className="border rounded p-3 shadow-sm">
-//               <h3 className="font-bold">{job.position} @ {job.company}</h3>
-//               <p className="text-sm">Status: {job.status}</p>
-//               <p className="text-xs text-gray-500">
-//                 Applied on: {job.dateApplied ? new Date(job.dateApplied).toLocaleDateString() : 'N/A'}
-//               </p>
-//               <Link
-//                 href={`/edit-job/${job.id}`}
-//                 className="text-blue-600 text-sm underline mt-2 inline-block"
-//               >
-//                 Edit
-//               </Link>
-//             </li>
-//           ))}
-//         </ul>
-//       )}
-//     </div>
-//   );
-// }
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -53,6 +5,16 @@ import Link from 'next/link';
 import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useUser } from '@clerk/nextjs';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
 
 type FirestoreTimestamp = {
   seconds: number;
@@ -69,12 +31,22 @@ type Job = {
   updatedAt?: FirestoreTimestamp;
 };
 
+const statusColors: Record<string, string> = {
+  applied: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+  interview: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+  offer: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+  rejected: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+};
+
 export default function JobsPage() {
   const { isLoaded, user } = useUser();
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
     if (!isLoaded || !user) {
@@ -92,7 +64,6 @@ export default function JobsPage() {
           ...doc.data()
         })) as Job[];
 
-        // Sort jobs by createdAt descending
         jobsData.sort((a, b) => {
           const dateA = parseDate(a.createdAt);
           const dateB = parseDate(b.createdAt);
@@ -100,11 +71,13 @@ export default function JobsPage() {
         });
 
         setJobs(jobsData);
+        setFilteredJobs(jobsData);
         setError(null);
       } catch (err) {
         console.error("Failed to fetch jobs:", err);
         setError("Failed to load jobs. Please try again.");
         setJobs([]);
+        setFilteredJobs([]);
       } finally {
         setLoading(false);
       }
@@ -112,6 +85,24 @@ export default function JobsPage() {
 
     fetchJobs();
   }, [isLoaded, user]);
+
+  useEffect(() => {
+    let results = jobs;
+    
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      results = results.filter(job => 
+        job.company.toLowerCase().includes(term) || 
+        job.position.toLowerCase().includes(term)
+      );
+    }
+    
+    if (statusFilter !== 'all') {
+      results = results.filter(job => job.status === statusFilter);
+    }
+    
+    setFilteredJobs(results);
+  }, [searchTerm, statusFilter, jobs]);
 
   const parseDate = (timestamp?: FirestoreTimestamp): Date => {
     if (!timestamp || typeof timestamp.toDate !== 'function') return new Date(NaN);
@@ -142,71 +133,131 @@ export default function JobsPage() {
   };
 
   if (!isLoaded || loading) {
-    return <p className="p-4">Loading...</p>;
+    return <div className="p-4">Loading...</div>;
   }
 
   if (!user) {
-    return <p className="p-4">Please sign in to view jobs</p>;
+    return <div className="p-4">Please sign in to view jobs</div>;
   }
 
   if (error) {
     return (
-      <div className="p-4 text-red-500">
+      <div className="p-4 text-destructive">
         {error}
-        <button
+        <Button
+          variant="ghost"
           onClick={() => window.location.reload()}
-          className="ml-2 text-blue-500"
+          className="ml-2"
         >
           Retry
-        </button>
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
+    <div className="p-4 max-w-7xl mx-auto">
       <h2 className="text-xl font-semibold mb-4">Your Job Applications</h2>
+      
+      <div className="mb-4">
+        <p className="text-lg font-medium">
+          {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'} found
+        </p>
+      </div>
+      
+      <Card className="mb-6">
+        <CardContent className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="search" className="block text-sm font-medium mb-1">
+              Search Jobs
+            </label>
+            <Input
+              type="text"
+              id="search"
+              placeholder="Search by company or position"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="status" className="block text-sm font-medium mb-1">
+              Filter by Status
+            </label>
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => setStatusFilter(value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="applied">Applied</SelectItem>
+                <SelectItem value="interview">Interview</SelectItem>
+                <SelectItem value="offer">Offer</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
-      {jobs.length === 0 ? (
-        <div>
-          <p>No jobs found. Add your first job application!</p>
-          <p className="text-sm text-gray-500 mt-2">
-            Debug info: User ID - {user.id}
-          </p>
-        </div>
+      {filteredJobs.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <p className="text-muted-foreground">No jobs match your search criteria</p>
+            {jobs.length > 0 && (
+              <Button
+                variant="link"
+                onClick={() => {
+                  setSearchTerm('');
+                  setStatusFilter('all');
+                }}
+                className="mt-2"
+              >
+                Clear filters
+              </Button>
+            )}
+          </CardContent>
+        </Card>
       ) : (
-        <ul className="space-y-3">
-          {jobs.map((job) => (
-            <li key={job.id} className="border rounded p-3 shadow-sm">
-              <div className="flex justify-between items-start">
-                <div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredJobs.map((job) => (
+            <Card key={job.id} className="hover:bg-accent/50 transition-colors h-full">
+              <CardContent className="p-4 flex flex-col h-full">
+                <div className="flex-grow">
                   <h3 className="font-bold">{job.position} @ {job.company}</h3>
-                  <p className="text-sm">Status: {job.status}</p>
-                  <p className="text-xs text-gray-500">
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-sm">Status:</span>
+                    <span className={`text-xs px-2 py-1 rounded-full ${statusColors[job.status.toLowerCase()] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'}`}>
+                      {job.status}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
                     Applied on: {formatDate(job.createdAt)}
                   </p>
                 </div>
-                <div className="flex gap-3">
-                  <Link
-                    href={`/edit-job/${job.id}`}
-                    className="text-blue-600 text-sm underline"
-                  >
-                    Edit
-                  </Link>
-                  <button
+                <div className="flex gap-2 mt-4">
+                  <Button asChild variant="ghost" size="sm" className="flex-1">
+                    <Link href={`/edit-job/${job.id}`}>
+                      Edit
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex-1 text-destructive hover:text-destructive"
                     onClick={() => handleDeleteJob(job.id)}
                     disabled={deletingId === job.id}
-                    className={`text-red-600 text-sm underline ${
-                      deletingId === job.id ? 'opacity-50' : ''
-                    }`}
                   >
                     {deletingId === job.id ? 'Deleting...' : 'Delete'}
-                  </button>
+                  </Button>
                 </div>
-              </div>
-            </li>
+              </CardContent>
+            </Card>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
