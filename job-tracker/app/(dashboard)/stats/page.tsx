@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, PieChart } from '@mui/x-charts';
 import { Briefcase, CalendarCheck, Handshake, X } from 'lucide-react';
 
+
 type Job = {
   id: string;
   status: string;
@@ -145,19 +146,35 @@ export default function StatsPage() {
 
       {/* Monthly Applications Chart */}
       <Card>
-        <CardHeader>
-          <CardTitle>Monthly Applications</CardTitle>
-        </CardHeader>
-        <CardContent className="h-[300px]">
-          <BarChart
-            xAxis={[{
-              scaleType: 'band',
-              data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-            }]}
-            series={[{ data: monthlyData }]}
-          />
-        </CardContent>
-      </Card>
+  <CardHeader>
+    <CardTitle>Monthly Applications</CardTitle>
+  </CardHeader>
+  <CardContent className="h-[300px] p-0">
+    <div className="flex justify-center items-center w-full h-full">
+      <BarChart
+        height={300}
+        xAxis={[
+          {
+            scaleType: 'band',
+            data: [
+              'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+            ]
+          }
+        ]}
+        series={[{ data: monthlyData }]}
+        margin={{ top: 10, bottom: 20, left: 10, right: 10 }}
+        sx={{
+          width: '100%',
+          maxWidth: '100%',
+        }}
+        
+      />
+    </div>
+  </CardContent>
+</Card>
+
+
 
       {/* Pie Charts */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -165,16 +182,23 @@ export default function StatsPage() {
           <CardHeader>
             <CardTitle>Application Status</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]">
-            <PieChart
-              series={[{
-                data: statusData,
-                innerRadius: 30,
-                outerRadius: 100,
-                paddingAngle: 5,
-                cornerRadius: 5,
-              }]}
-            />
+          <CardContent className="h-36">
+          <PieChart
+              height={150}
+              width={300} 
+              series={[
+                {
+                  data: statusData,
+                  innerRadius: 0,
+                  outerRadius: 80,
+                  paddingAngle: 0,
+                  cornerRadius: 5,
+                  // cx: 150, // half of width
+                  // cy: 125, // half of height
+                },
+              ]}
+          />
+
           </CardContent>
         </Card>
 
@@ -182,16 +206,23 @@ export default function StatsPage() {
           <CardHeader>
             <CardTitle>Work Type</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]">
-            <PieChart
-              series={[{
-                data: workTypeData,
-                innerRadius: 30,
-                outerRadius: 100,
-                paddingAngle: 5,
-                cornerRadius: 5,
-              }]}
-            />
+          <CardContent className="h-52">
+          <PieChart
+              height={150}
+              width={300} 
+              series={[
+                {
+                  data: workTypeData,
+                  innerRadius: 0,
+                  outerRadius: 80,
+                  paddingAngle: 0,
+                  cornerRadius: 5,
+                  // cx: 150, // half of width
+                  // cy: 125, // half of height
+                },
+              ]}
+          />
+
           </CardContent>
         </Card>
 
@@ -199,16 +230,23 @@ export default function StatsPage() {
           <CardHeader>
             <CardTitle>Job Type</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]">
-            <PieChart
-              series={[{
-                data: jobTypeData,
-                innerRadius: 30,
-                outerRadius: 100,
-                paddingAngle: 5,
-                cornerRadius: 5,
-              }]}
-            />
+          <CardContent className="h-36">
+          <PieChart
+              height={150}
+              width={300} 
+              series={[
+                {
+                  data: jobTypeData,
+                  innerRadius: 0,
+                  outerRadius: 80,
+                  paddingAngle: 0,
+                  cornerRadius: 5,
+                  // cx: 150, // half of width
+                  // cy: 125, // half of height
+                },
+              ]}
+          />
+
           </CardContent>
         </Card>
       </div>
