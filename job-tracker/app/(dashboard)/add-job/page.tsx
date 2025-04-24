@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { doc, setDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useUser } from '@clerk/nextjs';
@@ -16,10 +15,15 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { X } from 'lucide-react';
 
-export default function AddJobPage() {
+interface AddJobPopupProps {
+  onClose: () => void;
+  onSuccess?: () => void;
+}
+
+export default function AddJobPopup({ onClose, onSuccess }: AddJobPopupProps) {
   const { isLoaded, user } = useUser();
-  const router = useRouter();
   const [form, setForm] = useState({
     company: '',
     position: '',
@@ -61,7 +65,8 @@ export default function AddJobPage() {
         updatedAt: serverTimestamp()
       });
 
-      router.push('/jobs');
+      if (onSuccess) onSuccess();
+      onClose();
     } catch (error) {
       console.error('Error adding job:', error);
       setError('Failed to save job. Please try again.');
@@ -75,8 +80,17 @@ export default function AddJobPage() {
   }
 
   return (
-    <div className="p-4 max-w-md mx-auto">
-      <Card>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-md relative">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute top-2 right-2 p-1 h-8 w-8"
+          onClick={onClose}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+        
         <CardHeader>
           <CardTitle className="text-xl">Add a New Job</CardTitle>
         </CardHeader>
@@ -185,13 +199,24 @@ export default function AddJobPage() {
               </Select>
             </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Saving...' : 'Save Job'}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={onClose}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="flex-1"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Saving...' : 'Save Job'}
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>

@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { X } from 'lucide-react';
 
 export default function EditJobPage() {
   const { isLoaded, user } = useUser();
@@ -110,8 +111,17 @@ export default function EditJobPage() {
   }
 
   return (
-    <div className="p-4 max-w-md mx-auto">
-      <Card>
+    <div className="fixed inset-0 flex items-start justify-center z-50 pt-20">
+      <Card className="w-full max-w-md relative mx-4 shadow-lg border">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute top-2 right-2 p-1 h-8 w-8"
+          onClick={() => router.push('/jobs')}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+        
         <CardHeader>
           <CardTitle className="text-xl">Edit Job</CardTitle>
         </CardHeader>
@@ -220,13 +230,24 @@ export default function EditJobPage() {
               </Select>
             </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? 'Saving...' : 'Save Changes'}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => router.push('/jobs')}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="flex-1"
+                disabled={loading}
+              >
+                {loading ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>

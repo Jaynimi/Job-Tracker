@@ -23,7 +23,8 @@ export default function Home() {
             praesentium id????
           </p>
           <Button className="mt-4" asChild>
-            <Link href="/add-job">Get Started</Link>
+            {/* <Link href="/add-job">Get Started</Link> */}
+            <Link href="/jobs">Get Started</Link>
           </Button>
         </div>
         <Image
