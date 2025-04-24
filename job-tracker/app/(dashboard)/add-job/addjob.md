@@ -1,6 +1,7 @@
 // 'use client';
 
 // import { useState } from 'react';
+// import { useRouter } from 'next/navigation';
 // import { doc, setDoc, collection, serverTimestamp } from 'firebase/firestore';
 // import { db } from '@/lib/firebase';
 // import { useUser } from '@clerk/nextjs';
@@ -15,15 +16,10 @@
 // } from '@/components/ui/select';
 // import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 // import { Label } from '@/components/ui/label';
-// import { X } from 'lucide-react';
 
-// interface AddJobPopupProps {
-//   onClose: () => void;
-//   onSuccess?: () => void;
-// }
-
-// export default function AddJobPopup({ onClose, onSuccess }: AddJobPopupProps) {
+// export default function AddJobPage() {
 //   const { isLoaded, user } = useUser();
+//   const router = useRouter();
 //   const [form, setForm] = useState({
 //     company: '',
 //     position: '',
@@ -65,8 +61,7 @@
 //         updatedAt: serverTimestamp()
 //       });
 
-//       if (onSuccess) onSuccess();
-//       onClose();
+//       router.push('/jobs');
 //     } catch (error) {
 //       console.error('Error adding job:', error);
 //       setError('Failed to save job. Please try again.');
@@ -80,17 +75,8 @@
 //   }
 
 //   return (
-//     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-//       <Card className="w-full max-w-md relative">
-//         <Button
-//           variant="ghost"
-//           size="sm"
-//           className="absolute top-2 right-2 p-1 h-8 w-8"
-//           onClick={onClose}
-//         >
-//           <X className="h-4 w-4" />
-//         </Button>
-        
+//     <div className="p-4 max-w-md mx-auto">
+//       <Card>
 //         <CardHeader>
 //           <CardTitle className="text-xl">Add a New Job</CardTitle>
 //         </CardHeader>
@@ -199,24 +185,13 @@
 //               </Select>
 //             </div>
 
-//             <div className="flex gap-2">
-//               <Button
-//                 type="button"
-//                 variant="outline"
-//                 className="flex-1"
-//                 onClick={onClose}
-//                 disabled={isSubmitting}
-//               >
-//                 Cancel
-//               </Button>
-//               <Button
-//                 type="submit"
-//                 className="flex-1"
-//                 disabled={isSubmitting}
-//               >
-//                 {isSubmitting ? 'Saving...' : 'Save Job'}
-//               </Button>
-//             </div>
+//             <Button
+//               type="submit"
+//               className="w-full"
+//               disabled={isSubmitting}
+//             >
+//               {isSubmitting ? 'Saving...' : 'Save Job'}
+//             </Button>
 //           </form>
 //         </CardContent>
 //       </Card>
